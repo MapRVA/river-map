@@ -1,0 +1,19 @@
+---
+type: geojson
+options:
+  bounds: [ -77.5, 37.5, -77.3, 37.6 ]
+  bearing: -41
+  zoom: 12
+style:
+  layers:
+    - type: symbol
+      layout:
+        icon-image:
+          - case
+          - [ ==, [ get, cso_active ], false ]
+          - emoji:thumbsup
+          - emoji:poop
+        icon-overlap: always
+  extends: https://styles.maprva.org/maptiler-basic.json
+---
+https://raw.githubusercontent.com/MapRVA/cso/refs/heads/trunk/data/cso_overflow.geojson
