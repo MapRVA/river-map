@@ -19,7 +19,7 @@ jobs:
 
       - name: Set up R packages
         run: |
-         Rscript -e "install.packages(c('httr2', 'dplyr', 'sf'))"
+         Rscript -e "install.packages(c('httr2', 'dplyr', 'sf', 'jsonlite'))"
         
       - name: Poll CSO API
         run: |
