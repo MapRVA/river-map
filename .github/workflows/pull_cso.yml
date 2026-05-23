@@ -1,0 +1,34 @@
+on:
+  workflow_dispatch:
+
+name: Scrape CSOs
+
+jobs:
+  cso:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      CSO_TOKEN: ${{ secrets.CSO_TOKEN }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+        
+      - name: Set up R
+        uses: eddelbuettel/github-actions/r2u-setup@master
+
+      - name: Set up R packages
+        run: |
+         Rscript -e "install.packages(c('httr2', 'dplyr', 'sf'))"
+        
+      - name: Poll CSO API
+        run: |
+          Rscript -e "source('rva_cso.R')"
+
+      - name: Commit record to repository
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add "cso_data/cso_overflow.geojson" "cso_data/cso_log.csv"
+          git commit -m "[auto] Pull CSOs $(TZ=America/New_York date +'%Y-%m-%d %H:%M')"
+          git push

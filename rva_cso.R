@@ -50,11 +50,11 @@ out_data$name <- sapply(
   USE.NAMES = FALSE
 )
 
-write.csv(out_data, "cso_log.csv", append = T)
+write.csv(out_data, "cso_data/cso_log.csv", append = T)
 
 merge(out_data, cso_geo, by.x = "name", by.y = "ref:US-VA:rva-dpu") |>
   select(-layer, -name.y, -note, -bodies, -analysis_config_id) |>
-  st_write("cso_overflow.geojson", append = T)
+  st_write("cso_data/cso_overflow.geojson", append = T)
 
 ### Various site metadata are hidden in here, but they aren't all that useful for this purpose.
 # req_meta <- request("https://restapi.emnet.net/api/tables/inodes/47/") |>
