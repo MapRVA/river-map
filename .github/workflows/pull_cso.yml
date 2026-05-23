@@ -29,6 +29,6 @@ jobs:
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
-          git add "cso_data/cso_overflow.geojson" "cso_data/cso_log.csv"
+          git add "data/cso_overflow.geojson" "data/cso_log.csv"
           git commit -m "[auto] Pull CSOs $(TZ=America/New_York date +'%Y-%m-%d %H:%M')"
           git push
