@@ -50,7 +50,8 @@ out_data$name <- sapply(
   USE.NAMES = FALSE
 )
 
-write.csv(out_data, "data/cso_log.csv", append = T)
+write.table(out_data, "data/cso_log.csv", append = T, sep=”,”,
+            col.names = F, row.names = F)
 
 merge(out_data, cso_geo, by.x = "name", by.y = "ref:US-VA:rva-dpu") |>
   select(-layer, -name.y, -note, -bodies, -analysis_config_id) |>
