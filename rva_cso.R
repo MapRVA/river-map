@@ -74,6 +74,7 @@ out_data$name <- sapply(
   },
   USE.NAMES = FALSE
 )
+out_data$query_time <- query_time
 
 write.table(
   out_data,
