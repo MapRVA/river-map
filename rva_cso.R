@@ -77,9 +77,12 @@ out_data$name <- sapply(
   USE.NAMES = FALSE
 )
 out_data$query_time <- query_time
-out_data$cso_recent <- (as.POSIXct(out_data$query_time) -
-  as.POSIXct(out_data$cso_last)) <
-  (48 * 60 * 60)
+out_data$cso_recent <- difftime(
+  as.POSIXct(out_data$query_time),
+  as.POSIXct(out_data$cso_last),
+  units = "hours"
+) <
+  48
 
 write.table(
   out_data,
