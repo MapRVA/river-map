@@ -7,7 +7,9 @@ cso_geo <- read_sf('cso.geojson')
 
 # API base + "auth"
 api_base <- request("https://restapi.emnet.net/api/tables") |>
-  req_headers(`Authorization` = Sys.getenv("CSO_TOKEN"))
+  req_headers(`Authorization` = Sys.getenv("CSO_TOKEN")) |>
+  req_options(ssl_verifypeer = 0)
+
 
 cat("\nQuerying API for site info...\n")
 
