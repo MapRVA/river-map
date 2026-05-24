@@ -10,9 +10,13 @@ style:
       layout:
         icon-image:
           - case
-          - [ ==, [ get, cso_active ], false ]
-          - emoji:thumbsup
+          - [any, 
+              [ ==, [ get, cso_recent ], true ],
+              [ ==, [ get, cso_now ], true ],
+              [ ==, [ get, cso_active ], true ]
+            ]
           - emoji:poop
+          - emoji:thumbsup
         icon-overlap: always
   extends: https://styles.maprva.org/maptiler-basic.json
 ---
