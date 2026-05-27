@@ -1,0 +1,42 @@
+---
+type: geojson
+options:
+  bounds: [-77.52485275268559,37.508091780419434,-77.40812301635748,37.55464854230685]
+  maxBounds: [-77.56793975830084,37.494064605987006,-77.36383438110356,37.598184102020234]
+  zoom: 12
+style:
+  sources:
+    cso:
+      type: geojson
+      data: https://poop.maprva.org/data/cso_overflow.geojson
+    water:
+      type: geojson
+      data: https://poop.maprva.org/data/water.geojson
+  layers:
+    - type: line
+      source: water
+      line-color: gray
+      line-opacity: 0.5
+      line-width: 3
+      beforeLayerId: building
+    - type: fill
+      source: water
+      filter: [==, [geometry-type], Polygon]
+      fill-color: gray
+      fill-opacity: 0.5
+      beforeLayerId: building
+    - type: symbol
+      source: cso
+      layout:
+        icon-image:
+          - case
+          - [any, 
+              [ ==, [ get, cso_recent ], true ],
+              [ ==, [ get, cso_now ], true ],
+              [ ==, [ get, cso_active ], true ]
+            ]
+          - emoji:poop
+          - emoji:thumbsup
+        icon-overlap: always
+  extends: https://styles.maprva.org/maptiler-basic.json
+---

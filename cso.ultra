@@ -20,4 +20,4 @@ style:
         icon-overlap: always
   extends: https://styles.maprva.org/maptiler-basic.json
 ---
-https://raw.githubusercontent.com/MapRVA/cso/refs/heads/trunk/data/cso_overflow.geojson
+https://poop.maprva.org/data/cso_overflow.geojson
