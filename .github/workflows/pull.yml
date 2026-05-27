@@ -6,7 +6,7 @@ on:
 name: Fetch data
 
 jobs:
-  james_river_watch:
+  pull:
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -32,15 +32,6 @@ jobs:
           git add data/james_river_watch data/james_river_watch.geojson
           git commit -m "[auto] Pull James River Watch data $(TZ=America/New_York date +'%Y-%m-%d %H:%M')"
           git push
-  combined_sewer_overflow:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    env:
-      CSO_TOKEN: ${{ secrets.CSO_TOKEN }}
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v6
         
       - name: Set up R
         uses: eddelbuettel/github-actions/r2u-setup@master
