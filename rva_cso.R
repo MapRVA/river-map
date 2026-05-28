@@ -76,13 +76,15 @@ out_data$name <- sapply(
   },
   USE.NAMES = FALSE
 )
+
 out_data$query_time <- query_time
-out_data$cso_recent <- difftime(
+out_data$days_since_cso <- difftime(
   as.POSIXct(out_data$query_time),
   as.POSIXct(out_data$cso_last),
-  units = "hours"
-) <
-  48
+  units = "days"
+) |>
+  as.numeric()
+out_data$cso_recent <- out_data$days_since_cso <= 2
 
 write.table(
   out_data,
