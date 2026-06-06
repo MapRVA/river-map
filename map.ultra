@@ -18,6 +18,19 @@ style:
       fill-opacity: 0.5
       beforeLayerId: building
     - type: symbol
+      filter: [==, [get, type], streamgauge]
+      icon-image: pinhead:circle_outline_with_top_left_quarter_and_bottom_right_quarter
+      icon-overlap: always
+      #icon-color:
+      #  - case
+      #  - [ ==, [ get, cso_now ], true ]
+      #  - darkred
+      #  - [ ==, [ get, cso_active ], true ]
+      #  - red
+      #  - [ ==, [ get, cso_recent ], true ]
+      #  - orange
+      #  - green
+    - type: symbol
       filter: [==, [get, type], test]
       icon-image: pinhead:circle
       icon-overlap: always
@@ -100,8 +113,9 @@ export const source = async () => {
     fetch("https://poop.maprva.org/data/cso_overflow.geojson"),
     fetch("https://poop.maprva.org/data/james_river_watch.geojson"),
     fetch("https://poop.maprva.org/data/water.geojson"),
+    fetch("https://api.water.noaa.gov/nwps/v1/gauges?bbox.xmin=-77.60205967932723&bbox.ymin=37.51971667627613&bbox.xmax=-77.31705491509821&bbox.ymax=37.62441381867703&srid=EPSG_4326"),
   ]);
-  const [cso, testResults, water] = await Promise.all(resps.map(r => r.json()));
+  const [cso, testResults, water, gauges] = await Promise.all(resps.map(r => r.json()));
 
   // get just the latest test results and compute their age
   const latestTestResults = testResults.features.reduce((acc, cur) => {
@@ -120,7 +134,16 @@ export const source = async () => {
       ...Object.values(latestTestResults),
       ...cso.features,
       ...water.features,
+      ...gauges.gauges.map(g => ({
+        type: "Feature",
+        properties: {...g, type: "streamgauge"},
+        geometry: {
+          type: "Point",
+          coordinates: [g.longitude, g.latitude],
+        },
+      })),
     ],
   };
   return { type: "geojson", data };
 }
+
