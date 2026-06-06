@@ -1,42 +1,83 @@
 ---
-type: geojson
+type: javascript
 options:
   bounds: [-77.52485275268559,37.508091780419434,-77.40812301635748,37.55464854230685]
   maxBounds: [-77.56793975830084,37.494064605987006,-77.36383438110356,37.598184102020234]
   zoom: 12
 style:
-  sources:
-    cso:
-      type: geojson
-      data: https://poop.maprva.org/data/cso_overflow.geojson
-    water:
-      type: geojson
-      data: https://poop.maprva.org/data/water.geojson
   layers:
     - type: line
-      source: water
+      filter: [==, [geometry-type], LineString]
       line-color: gray
       line-opacity: 0.5
       line-width: 3
       beforeLayerId: building
     - type: fill
-      source: water
       filter: [==, [geometry-type], Polygon]
       fill-color: gray
       fill-opacity: 0.5
       beforeLayerId: building
     - type: symbol
-      source: cso
-      layout:
-        icon-image:
-          - case
-          - [any, 
-              [ ==, [ get, cso_recent ], true ],
-              [ ==, [ get, cso_now ], true ],
-              [ ==, [ get, cso_active ], true ]
-            ]
-          - emoji:poop
-          - emoji:thumbsup
-        icon-overlap: always
+      filter: [==, [get, type], test]
+      icon-image: pinhead:circle
+      icon-overlap: always
+      icon-opacity:
+        - interpolate
+        - [linear]
+        - [to-number, [get, age]]
+        - 0
+        - 1
+        - 30
+        - 0
+      icon-color:
+        - case
+        - [">=", [to-number, [get, Ecoli]], 235]
+        - red
+        - [">=", [to-number, [get, Ecoli]], 100]
+        - yellow
+        - green
+    - type: symbol
+      filter: [==, [get, man_made], outfall]
+      icon-image: pinhead:triangle_down
+      icon-overlap: always
+      icon-color:
+        - case
+        - [ ==, [ get, cso_now ], true ]
+        - darkred
+        - [ ==, [ get, cso_active ], true ]
+        - red
+        - [ ==, [ get, cso_recent ], true ]
+        - orange
+        - green
   extends: https://styles.maprva.org/maptiler-basic.json
 ---
+export const source = async () => {
+  // fetch all data in parallel
+  const resps = await Promise.all([
+    fetch("https://poop.maprva.org/data/cso_overflow.geojson"),
+    fetch("https://poop.maprva.org/data/james_river_watch.geojson"),
+    fetch("https://poop.maprva.org/data/water.geojson"),
+  ]);
+  const [cso, testResults, water] = await Promise.all(resps.map(r => r.json()));
+
+  // get just the latest test results and compute their age
+  const latestTestResults = testResults.features.reduce((acc, cur) => {
+    if (!cur.properties.name || !cur.properties.creationdate) return acc;
+    cur.properties.type = "test";
+    cur.properties.age = Math.round((Date.now() - parseInt(cur.properties.creationdate)) / 1000/60/60/24);
+    if (!acc[cur.properties.name] || acc[cur.properties.name]?.properties.creationdate < cur.properties.creationdate) {
+      acc[cur.properties.name] = cur;
+    }
+    return acc;
+  }, {});
+
+  const data = {
+    type: "FeatureCollection",
+    features: [
+      ...Object.values(latestTestResults),
+      ...cso.features,
+      ...water.features,
+    ],
+  };
+  return { type: "geojson", data };
+}
