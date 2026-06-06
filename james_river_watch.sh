@@ -3,7 +3,9 @@
 set -eu -o pipefail
 
 now=$(date +%FT%T)
+lastweek=$(date -d "1 week ago" +"%Y-%m-%d %T")
 server="https://services7.arcgis.com/9ZKA6C4VwqZYRSvM/ArcGIS/rest/services/River_Watch_data_with_station_locations/FeatureServer/0"
 
-esri2geojson "$server" data/james_river_watch/$now.geojson
+# pull entries from the last week, within bbox
+esri2geojson -p "where=creationdate>= TIMESTAMP '$lw'" -p "geometry=-77.567939,37.494064,-77.363834,37.598184" -p "inSR=4326" "$server" data/james_river_watch/$now.geojson
 ln -sf ./james_river_watch/$now.geojson data/james_river_watch.geojson
