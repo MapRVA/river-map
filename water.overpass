@@ -1,6 +1,13 @@
 // This query is currently manually used on overpass-ultra.us to generate water.geojson
 [bbox:37.441871701544855,-77.60205967932723,37.62441381867703,-77.31705491509821][out:json];
+
 area[wikidata=Q6797360][leisure=park] -> .maymont;
+(
+way[waterway](area.maymont);
+-
+way(236150532); // japanese garden / waterfall
+);
+out geom;
 (
 way(1195913819);
 way(1352144236);
@@ -11,7 +18,6 @@ way[waterway][name="Almond Creek"];
 way[waterway][name="Manchester Canal"];way(304580843);way(304580844);
 nwr[natural][water=canal][intermittent!=yes];
 relation[natural][water=river];
-way[waterway](area.maymont);
 way[waterway][name="Kanawha Canal"];
 way[waterway][name="Kanawha Canal Outflow"];
 );
