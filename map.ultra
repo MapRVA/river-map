@@ -4,19 +4,74 @@ options:
   bounds: [-77.52485275268559,37.508091780419434,-77.40812301635748,37.55464854230685]
   maxBounds: [-77.56793975830084,37.494064605987006,-77.36383438110356,37.598184102020234]
   zoom: 12
+popupTemplate: |
+  {% if properties.type == "test" %}
+    <h3>Test Results<br>{{ properties.niceName }} - {{ properties.creationdate | date: "%B %d" }} </h3>
+    E. coli (CFU/100mL): <b><u>{{ properties.Ecoli }}</b></u>
+    <br>
+    Data from <a href="https://experience.arcgis.com/experience/a4993d1967c84cb88f1fd3a324c570fc">James River Watch</a>
+  {% endif %}
+  {% if properties.man_made == "outfall" %}
+    <h3>CSO outfall<br>{{ properties.name }}</h3>
+    Last CSO Event: <b><u>{{ properties.cso_last }}</u></b>
+    <br>
+    Data from <a href="https://apps.emnet.net/richmond-pub-map-app/?city=47&config=5c0cacee-7e95-4eea-922d-c736c83eb4b9">Richmond CSO Map</a>
+  {% endif %}
+  {% if properties.type == "streamgauge" %}
+    <h3>Stream Gauge<br>{{ properties.name }}</h3>
+    Water Level: <b><u>{{ properties.primary }}{{ properties.primaryUnit }}</u></b>
+    <br>
+    Flow Rate: <b><u>{{ properties.secondary }}{{ properties.secondaryUnit }}</u></b>
+    <br>
+    Observed Status: <b><u>{{ properties.floodCategory | replace: "_", " " }}</u></b>
+    <br>
+    Forecast Status: <b><u>{{ properties.floodCategoryForecast | replace: "_", " " }}</u></b>
+    <br>
+    <a href="https://water.noaa.gov/resources/hydrographs/{{ properties.lid | downcase }}_hg.png" target="_blank">
+    <img style="width: 100%; max-width: 25em; height: auto; display: block;" src="https://water.noaa.gov/resources/hydrographs/{{ properties.lid | downcase }}_hg.png"/>
+    </a>
+    <br>
+    Data from <a href="https://water.noaa.gov/gauges/{{ properties.lid | downcase }}">NOAA</a>
+  {% endif %}
+  <details><summary>details</summary>
+  <h3>Properties</h3>
+  {%- for prop in properties %}
+    <code>{{ prop[0] }} = {{ prop[1] }}</code>
+    <br>
+  {%- endfor %}
+  </details>
 style:
+  sources:
+    water:
+      type: geojson
+      data: https://poop.maprva.org/data/water.geojson
   layers:
     - type: line
+      source: water
       filter: [==, [geometry-type], LineString]
       line-color: gray
       line-opacity: 0.5
       line-width: 3
       beforeLayerId: building
     - type: fill
+      source: water
       filter: [==, [geometry-type], Polygon]
       fill-color: gray
       fill-opacity: 0.5
       beforeLayerId: building
+    - type: symbol
+      filter: [==, [get, type], streamgauge]
+      icon-image: pinhead:circle_outline_with_top_left_quarter_and_bottom_right_quarter
+      icon-overlap: always
+      #icon-color:
+      #  - case
+      #  - [ ==, [ get, cso_now ], true ]
+      #  - darkred
+      #  - [ ==, [ get, cso_active ], true ]
+      #  - red
+      #  - [ ==, [ get, cso_recent ], true ]
+      #  - orange
+      #  - green
     - type: symbol
       filter: [==, [get, type], test]
       icon-image: pinhead:circle
@@ -94,19 +149,30 @@ controls:
           border-radius: 50%;
         }
 ---
+const testNames = {
+  'J10': "14th Street",
+  'J20': "Rope Swing at Tredegar",
+  'J21': "Reedy Creek",
+  'J22': "James River 42nd Street Access",
+  'J23': "Pony Pasture",
+  'J24': "Huguenot Flatwater",
+  'J41': "Chapel Island",
+  'J08 ': "Rockett's Landing",
+};
 export const source = async () => {
   // fetch all data in parallel
   const resps = await Promise.all([
     fetch(`https://poop.maprva.org/data/cso_overflow.geojson?t=${Date.now()}`),
     fetch(`https://poop.maprva.org/data/james_river_watch.geojson?t=${Date.now()}`),
-    fetch(`https://poop.maprva.org/data/water.geojson`),
+    fetch("https://api.water.noaa.gov/nwps/v1/gauges?bbox.xmin=-77.60205967932723&bbox.ymin=37.51971667627613&bbox.xmax=-77.31705491509821&bbox.ymax=37.62441381867703&srid=EPSG_4326"),
   ]);
-  const [cso, testResults, water] = await Promise.all(resps.map(r => r.json()));
+  const [cso, testResults, gauges] = await Promise.all(resps.map(r => r.json()));
 
   // get just the latest test results and compute their age
   const latestTestResults = testResults.features.reduce((acc, cur) => {
     if (!cur.properties.name || !cur.properties.creationdate) return acc;
     cur.properties.type = "test";
+    cur.properties.niceName = testNames[cur.properties.name];
     cur.properties.age = Math.round((Date.now() - parseInt(cur.properties.creationdate)) / 1000/60/60/24);
     if (!acc[cur.properties.name] || acc[cur.properties.name]?.properties.creationdate < cur.properties.creationdate) {
       acc[cur.properties.name] = cur;
@@ -119,8 +185,16 @@ export const source = async () => {
     features: [
       ...Object.values(latestTestResults),
       ...cso.features,
-      ...water.features,
+      ...gauges.gauges.map(g => ({
+        type: "Feature",
+        properties: {...g, ...g.status.observed, floodCategoryForecast: g.status.forecast.floodCategory, type: "streamgauge"},
+        geometry: {
+          type: "Point",
+          coordinates: [g.longitude, g.latitude],
+        },
+      })),
     ],
   };
   return { type: "geojson", data };
 }
+
