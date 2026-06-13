@@ -97,9 +97,9 @@ controls:
 export const source = async () => {
   // fetch all data in parallel
   const resps = await Promise.all([
-    fetch("https://poop.maprva.org/data/cso_overflow.geojson"),
-    fetch("https://poop.maprva.org/data/james_river_watch.geojson"),
-    fetch("https://poop.maprva.org/data/water.geojson"),
+    fetch(`https://poop.maprva.org/data/cso_overflow.geojson?t=${Date.now()}`),
+    fetch(`https://poop.maprva.org/data/james_river_watch.geojson?t=${Date.now()}`),
+    fetch(`https://poop.maprva.org/data/water.geojson`),
   ]);
   const [cso, testResults, water] = await Promise.all(resps.map(r => r.json()));
 
