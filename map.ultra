@@ -94,20 +94,64 @@ controls:
           border-radius: 50%;
         }
 ---
+import EsriDump from "https://files.trailstash.net/web-esri-dump.js";
+
+const monthAgo = new Date();
+monthAgo.setMonth(monthAgo.getUTCMonth() - 1);
+
 export const source = async () => {
+  const esriResp = new Promise((resolve, reject) => {
+    const where = `creationdate > TIMESTAMP '${monthAgo.toISOString().slice(0, -5).replace("T", " ")}'`;
+      const esri = new EsriDump(
+        "https://services7.arcgis.com/9ZKA6C4VwqZYRSvM/ArcGIS/rest/services/River_Watch_data_with_station_locations/FeatureServer/0",
+        {
+          approach: 'iter',
+          params: {
+            where,
+            geometry: "-77.567939,37.494064,-77.363834,37.598184",
+            inSR: 4326,
+          },
+        },
+      );
+      
+      const data = {
+        type: "FeatureCollection",
+        features: [],
+      };
+
+      esri.fetch();
+
+      esri.on("type", (type) => {
+        //Emitted before any data events
+        //emits one of
+        // - `MapServer'
+        // - `FeatureServer'
+      });
+
+      esri.on("feature", (feature) => {
+        data.features.push(feature);
+      });
+
+      esri.on("done", () => {
+        resolve(data);
+      });
+
+      esri.on("error", reject);
+    });
+
   // fetch all data in parallel
   const resps = await Promise.all([
     fetch(`https://poop.maprva.org/data/cso_overflow.geojson?t=${Date.now()}`),
-    fetch(`https://poop.maprva.org/data/james_river_watch.geojson?t=${Date.now()}`),
     fetch(`https://poop.maprva.org/data/water.geojson`),
   ]);
-  const [cso, testResults, water] = await Promise.all(resps.map(r => r.json()));
+  const [cso, water] = await Promise.all(resps.map(r => r.json()));
+  const testResults = await esriResp;
 
   // get just the latest test results and compute their age
   const latestTestResults = testResults.features.reduce((acc, cur) => {
     if (!cur.properties.name || !cur.properties.creationdate) return acc;
     cur.properties.type = "test";
-    cur.properties.age = Math.round((Date.now() - parseInt(cur.properties.creationdate)) / 1000/60/60/24);
+    cur.properties.age = Math.round((Date.now() - Date.parse(cur.properties.creationdate)) / 1000/60/60/24);
     if (!acc[cur.properties.name] || acc[cur.properties.name]?.properties.creationdate < cur.properties.creationdate) {
       acc[cur.properties.name] = cur;
     }
