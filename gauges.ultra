@@ -1,0 +1,16 @@
+---
+type: geojson
+transform: |
+  export default (data) => ({
+    type: "FeatureCollection",
+    features: data.gauges.map(g => ({
+      type: "Feature",
+      properties: g,
+      geometry: {
+        type: "Point",
+        coordinates: [g.longitude, g.latitude],
+      },
+    })),
+  })
+---
+https://api.water.noaa.gov/nwps/v1/gauges?bbox.xmin=-77.60205967932723&bbox.ymin=37.441871701544855&bbox.xmax=-77.31705491509821&bbox.ymax=37.62441381867703&srid=EPSG_4326

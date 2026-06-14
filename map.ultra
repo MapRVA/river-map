@@ -1,22 +1,49 @@
 ---
 type: javascript
+
+
 options:
   bounds: [-77.52485275268559,37.508091780419434,-77.40812301635748,37.55464854230685]
   maxBounds: [-77.56793975830084,37.494064605987006,-77.36383438110356,37.598184102020234]
   zoom: 12
+
+
 style:
+  sources:
+    water:
+      type: geojson
+      data: https://poop.maprva.org/data/water.geojson
   layers:
     - type: line
+      source: water
       filter: [==, [geometry-type], LineString]
       line-color: gray
       line-opacity: 0.5
       line-width: 3
       beforeLayerId: building
     - type: fill
+      source: water
       filter: [==, [geometry-type], Polygon]
       fill-color: gray
       fill-opacity: 0.5
       beforeLayerId: building
+    - type: symbol
+      filter: [==, [get, type], streamgauge]
+      icon-image: pinhead:circle_outline_with_top_left_quarter_and_bottom_right_quarter
+      icon-overlap: always
+      icon-color:
+        - case
+        - [ ==, [ get, floodCategory ], major ]
+        - purple
+        - [ ==, [ get, floodCategory ], moderate ]
+        - red
+        - [ ==, [ get, floodCategory ], minor ]
+        - orange
+        - [ ==, [ get, floodCategory ], action ]
+        - yellow
+        - [ ==, [ get, floodCategory ], no_flooding ]
+        - green
+        - gray
     - type: symbol
       filter: [==, [get, type], test]
       icon-image: pinhead:circle
@@ -43,28 +70,110 @@ style:
       icon-color:
         - case
         - [ ==, [ get, cso_now ], true ]
-        - darkred
+        - purple
         - [ ==, [ get, cso_active ], true ]
         - red
         - [ ==, [ get, cso_recent ], true ]
         - orange
         - green
   extends: https://styles.maprva.org/maptiler-basic.json
+  
+
+popupTemplate: |
+  {% if properties.type == "test" %}
+    <h3>Test Results<br>{{ properties.niceName }} - {{ properties.creationdate | date: "%B %d" }} </h3>
+    E. coli (CFU/100mL): <b><u>{{ properties.Ecoli }}</b></u>
+    <br>
+    Data from <a href="https://experience.arcgis.com/experience/a4993d1967c84cb88f1fd3a324c570fc">James River Watch</a>
+  {% endif %}
+  {% if properties.man_made == "outfall" %}
+    <h3>CSO outfall<br>{{ properties.name }}</h3>
+    Last CSO Event: <b><u>{{ properties.cso_last }}</u></b>
+    <br>
+    Data from <a href="https://apps.emnet.net/richmond-pub-map-app/?city=47&config=5c0cacee-7e95-4eea-922d-c736c83eb4b9">Richmond CSO Map</a>
+  {% endif %}
+  {% if properties.type == "streamgauge" %}
+    <h3>Stream Gauge<br>{{ properties.name }}</h3>
+    Water Level: <b><u>{{ properties.primary }}{{ properties.primaryUnit }}</u></b>
+    <br>
+    Flow Rate: <b><u>{{ properties.secondary }}{{ properties.secondaryUnit }}</u></b>
+    <br>
+    Observed Status: <b><u>{{ properties.floodCategory | replace: "_", " " }}</u></b>
+    <br>
+    Forecast Status: <b><u>{{ properties.floodCategoryForecast | replace: "_", " " }}</u></b>
+    <br>
+    <a href="https://water.noaa.gov/resources/hydrographs/{{ properties.lid | downcase }}_hg.png" target="_blank">
+    <img style="width: 100%; max-width: 25em; height: auto; display: block;" src="https://water.noaa.gov/resources/hydrographs/{{ properties.lid | downcase }}_hg.png"/>
+    </a>
+    <br>
+    Data from <a href="https://water.noaa.gov/gauges/{{ properties.lid | downcase }}">NOAA</a>
+  {% endif %}
+  <details><summary>details</summary>
+  <h3>Properties</h3>
+  {%- for prop in properties %}
+    <code>{{ prop[0] }} = {{ prop[1] }}</code>
+    <br>
+  {%- endfor %}
+  </details>
 controls:
   - type: HTMLControl
     options:
       html: >
         <div id="legend" class="map-legend">
             <h4>CSO Outfalls</h4>
-            <div><div class="triangle" style="background: green;"></div>No recent events</div>
-            <div><div class="triangle" style="background: orange;"></div>Recent event</div>
-            <div><div class="triangle" style="background: red;"></div>Active event</div>
-            <div><div class="triangle" style="background: darkred;"></div>Event happening now</div>
+            <div>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 15"><path fill="purple" d="m8.35 13.64 5.69-9.11a1 1 0 0 0-.31-1.38c-.16-.1-.35-.15-.53-.15H1.8c-.55 0-1 .45-1 1 0 .19.06.37.16.53l5.69 9.11a1.003 1.003 0 0 0 1.7 0"/></svg>
+              Event happening now
+            </div>
+            <div>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 15"><path fill="red" d="m8.35 13.64 5.69-9.11a1 1 0 0 0-.31-1.38c-.16-.1-.35-.15-.53-.15H1.8c-.55 0-1 .45-1 1 0 .19.06.37.16.53l5.69 9.11a1.003 1.003 0 0 0 1.7 0"/></svg>
+              Active event
+            </div>
+            <div>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 15"><path fill="orange" d="m8.35 13.64 5.69-9.11a1 1 0 0 0-.31-1.38c-.16-.1-.35-.15-.53-.15H1.8c-.55 0-1 .45-1 1 0 .19.06.37.16.53l5.69 9.11a1.003 1.003 0 0 0 1.7 0"/></svg>
+              Recent event
+            </div>
+            <div>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 15"><path fill="green" d="m8.35 13.64 5.69-9.11a1 1 0 0 0-.31-1.38c-.16-.1-.35-.15-.53-.15H1.8c-.55 0-1 .45-1 1 0 .19.06.37.16.53l5.69 9.11a1.003 1.003 0 0 0 1.7 0"/></svg>
+              No recent events
+            </div>
+            
             <h4>James River Watch testing sites</h4>
-            <div><div class="circle"  style="background-color: red;"></div>E. Coli &gt; 235</div>
-            <div><div class="circle"  style="background-color: yellow;"></div>&gt; 100</div>
-            <div><div class="circle"  style="background-color: green;"></div>&lt; 100</div>
-            <div>Transparency = days since test</div>
+            <div>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 15"><path fill="red" d="m8.35 13.64 5.69-9.11a1 1 0 0 0-.31-1.38c-.16-.1-.35-.15-.53-.15H1.8c-.55 0-1 .45-1 1 0 .19.06.37.16.53l5.69 9.11a1.003 1.003 0 0 0 1.7 0"/></svg>
+              E. Coli &gt; 235
+            </div>
+            <div>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 15"><path fill="orange" d="m8.35 13.64 5.69-9.11a1 1 0 0 0-.31-1.38c-.16-.1-.35-.15-.53-.15H1.8c-.55 0-1 .45-1 1 0 .19.06.37.16.53l5.69 9.11a1.003 1.003 0 0 0 1.7 0"/></svg>
+              &gt; 100
+            </div>
+            <div>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 15"><path fill="green" d="m8.35 13.64 5.69-9.11a1 1 0 0 0-.31-1.38c-.16-.1-.35-.15-.53-.15H1.8c-.55 0-1 .45-1 1 0 .19.06.37.16.53l5.69 9.11a1.003 1.003 0 0 0 1.7 0"/></svg>
+              &lt; 100
+            </div>
+            <div>Transparency = days since test (invisible at 30 days)</div>
+            
+            <h4>NOAA Stream Gauge</h4>
+            <div>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 15"><path fill="purple" d="M7.5 0c4.06 0 7.37 3.23 7.5 7.26v.24c0 4.06-3.23 7.37-7.26 7.5H7.5C3.36 15 0 11.64 0 7.5S3.36 0 7.5 0m0 1.5v6h-6c0 3.31 2.69 6 6 6v-6h6c0-3.31-2.69-6-6-6"/></svg>
+              major flooding
+            </div>
+            <div>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 15"><path fill="red" d="M7.5 0c4.06 0 7.37 3.23 7.5 7.26v.24c0 4.06-3.23 7.37-7.26 7.5H7.5C3.36 15 0 11.64 0 7.5S3.36 0 7.5 0m0 1.5v6h-6c0 3.31 2.69 6 6 6v-6h6c0-3.31-2.69-6-6-6"/></svg>
+              moderate flooding
+            </div>
+            <div>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 15"><path fill="orange" d="M7.5 0c4.06 0 7.37 3.23 7.5 7.26v.24c0 4.06-3.23 7.37-7.26 7.5H7.5C3.36 15 0 11.64 0 7.5S3.36 0 7.5 0m0 1.5v6h-6c0 3.31 2.69 6 6 6v-6h6c0-3.31-2.69-6-6-6"/></svg>
+              minor flooding
+            </div>
+            <div>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 15"><path fill="yellow" d="M7.5 0c4.06 0 7.37 3.23 7.5 7.26v.24c0 4.06-3.23 7.37-7.26 7.5H7.5C3.36 15 0 11.64 0 7.5S3.36 0 7.5 0m0 1.5v6h-6c0 3.31 2.69 6 6 6v-6h6c0-3.31-2.69-6-6-6"/></svg>
+              action
+            </div>
+            <div>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 15"><path fill="green" d="M7.5 0c4.06 0 7.37 3.23 7.5 7.26v.24c0 4.06-3.23 7.37-7.26 7.5H7.5C3.36 15 0 11.64 0 7.5S3.36 0 7.5 0m0 1.5v6h-6c0 3.31 2.69 6 6 6v-6h6c0-3.31-2.69-6-6-6"/></svg>
+              no flooding
+            </div>
         </div>
       css: >
         .map-legend {
@@ -77,28 +186,27 @@ controls:
             left: 10px;
             z-index: 1;
         }
+        .map-legend svg { height: 15px; }
         .map-legend h4 {
             margin: 10px 0;
         }
         .map-legend div { margin-left: 10px; }
-        .map-legend div div {
-            display: inline-block;
-            margin: 0 10px 0 0;
-            height: 10px;
-            width: 10px;
-        }
-        .triangle {
-          clip-path: polygon(0% 0%, 100% 0%, 50% 100%); 
-        }
-        .circle {
-          border-radius: 50%;
-        }
 ---
 import EsriDump from "https://files.trailstash.net/web-esri-dump.js";
 
 const monthAgo = new Date();
 monthAgo.setMonth(monthAgo.getUTCMonth() - 1);
 
+const testNames = {
+  'J10': "14th Street",
+  'J20': "Rope Swing at Tredegar",
+  'J21': "Reedy Creek",
+  'J22': "James River 42nd Street Access",
+  'J23': "Pony Pasture",
+  'J24': "Huguenot Flatwater",
+  'J41': "Chapel Island",
+  'J08 ': "Rockett's Landing",
+};
 export const source = async () => {
   const esriResp = new Promise((resolve, reject) => {
     const where = `creationdate > TIMESTAMP '${monthAgo.toISOString().slice(0, -5).replace("T", " ")}'`;
@@ -142,15 +250,16 @@ export const source = async () => {
   // fetch all data in parallel
   const resps = await Promise.all([
     fetch(`https://poop.maprva.org/data/cso_overflow.geojson?t=${Date.now()}`),
-    fetch(`https://poop.maprva.org/data/water.geojson`),
+    fetch("https://api.water.noaa.gov/nwps/v1/gauges?bbox.xmin=-77.60205967932723&bbox.ymin=37.51971667627613&bbox.xmax=-77.31705491509821&bbox.ymax=37.62441381867703&srid=EPSG_4326"),
   ]);
-  const [cso, water] = await Promise.all(resps.map(r => r.json()));
+  const [cso, gauges] = await Promise.all(resps.map(r => r.json()));
   const testResults = await esriResp;
 
   // get just the latest test results and compute their age
   const latestTestResults = testResults.features.reduce((acc, cur) => {
     if (!cur.properties.name || !cur.properties.creationdate) return acc;
     cur.properties.type = "test";
+    cur.properties.niceName = testNames[cur.properties.name];
     cur.properties.age = Math.round((Date.now() - Date.parse(cur.properties.creationdate)) / 1000/60/60/24);
     if (!acc[cur.properties.name] || acc[cur.properties.name]?.properties.creationdate < cur.properties.creationdate) {
       acc[cur.properties.name] = cur;
@@ -163,8 +272,16 @@ export const source = async () => {
     features: [
       ...Object.values(latestTestResults),
       ...cso.features,
-      ...water.features,
+      ...gauges.gauges.map(g => ({
+        type: "Feature",
+        properties: {...g, ...g.status.observed, floodCategoryForecast: g.status.forecast.floodCategory, type: "streamgauge"},
+        geometry: {
+          type: "Point",
+          coordinates: [g.longitude, g.latitude],
+        },
+      })),
     ],
   };
   return { type: "geojson", data };
 }
+
