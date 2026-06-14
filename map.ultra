@@ -192,7 +192,7 @@ controls:
         }
         .map-legend div { margin-left: 10px; }
 ---
-import EsriDump from "https://files.trailstash.net/web-esri-dump.js";
+import EsriDump from "https://poop.maprva.org/web-esri-dump.js";
 
 const monthAgo = new Date();
 monthAgo.setMonth(monthAgo.getUTCMonth() - 1);
