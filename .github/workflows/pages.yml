@@ -43,6 +43,8 @@ jobs:
         run: npm ci
       - name: Build
         run: npm run build
+      - name: Copy dep
+        run: cp -L web-esri-dump.js dist/.
       - name: Copy data
         run: cp -r data dist/.
       - name: Setup Pages
