@@ -8,7 +8,7 @@ type: javascript
 
 options:
   bounds: [-77.52485275268559,37.508091780419434,-77.40812301635748,37.55464854230685]
-  maxBounds: [-77.56793975830084,37.494064605987006,-77.36383438110356,37.598184102020234]
+  maxBounds: [-77.56,37.40,-77.36,37.69]
   zoom: 12
 
 
@@ -121,9 +121,11 @@ popupTemplate: |
   </details>
 controls:
   - type: HTMLControl
+    position: bottom-left
     options:
       html: >
         <div id="legend" class="map-legend">
+        <details><summary>Legend</summary>
             <h4>CSO Outfalls</h4>
             <div>
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 15"><path fill="purple" d="m8.35 13.64 5.69-9.11a1 1 0 0 0-.31-1.38c-.16-.1-.35-.15-.53-.15H1.8c-.55 0-1 .45-1 1 0 .19.06.37.16.53l5.69 9.11a1.003 1.003 0 0 0 1.7 0"/></svg>
@@ -178,17 +180,20 @@ controls:
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 15"><path fill="green" d="M7.5 0c4.06 0 7.37 3.23 7.5 7.26v.24c0 4.06-3.23 7.37-7.26 7.5H7.5C3.36 15 0 11.64 0 7.5S3.36 0 7.5 0m0 1.5v6h-6c0 3.31 2.69 6 6 6v-6h6c0-3.31-2.69-6-6-6"/></svg>
               no flooding
             </div>
+        </details>
         </div>
       css: >
+        .map-legend details {
+          pointer-events: auto;
+        }
+        .map-legend details summary {
+          cursor: pointer;
+        }
         .map-legend {
             background-color: #fff;
             border-radius: 4px;
-            bottom: 30px;
             box-shadow: 0 1px 2px rgba(0,0,0,0.10);
             padding: 10px;
-            position: fixed;
-            left: 10px;
-            z-index: 1;
         }
         .map-legend svg { height: 15px; }
         .map-legend h4 {
