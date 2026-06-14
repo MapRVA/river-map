@@ -205,7 +205,7 @@ const testNames = {
   'J23': "Pony Pasture",
   'J24': "Huguenot Flatwater",
   'J41': "Chapel Island",
-  'J08 ': "Rockett's Landing",
+  'J08': "Rockett's Landing",
 };
 export const source = async () => {
   const esriResp = new Promise((resolve, reject) => {
@@ -284,4 +284,3 @@ export const source = async () => {
   };
   return { type: "geojson", data };
 }
-
