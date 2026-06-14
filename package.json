@@ -1,0 +1,14 @@
+{
+  "name": "river-map-rva",
+  "version": "1.0.0",
+  "description": "A map of the river in richmond",
+  "main": "index.js",
+  "scripts": {
+    "build": "ultra build ./map.ultra"
+  },
+  "author": "",
+  "license": "WTFPL",
+  "dependencies": {
+    "@trailstash/ultra": "=6.0.1"
+  }
+}

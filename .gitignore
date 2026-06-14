@@ -1,1 +1,3 @@
 .Renviron
+dist/
+node_modules/

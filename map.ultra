@@ -13,6 +13,9 @@ options:
 
 
 style:
+  sprite:
+    - id: pinhead
+      url: https://overpass-ultra.us/sprites/pinhead
   sources:
     water:
       type: geojson
