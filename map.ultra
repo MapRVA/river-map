@@ -1,9 +1,84 @@
 ---
 type: javascript
+
+
 options:
   bounds: [-77.52485275268559,37.508091780419434,-77.40812301635748,37.55464854230685]
   maxBounds: [-77.56793975830084,37.494064605987006,-77.36383438110356,37.598184102020234]
   zoom: 12
+
+
+style:
+  sources:
+    water:
+      type: geojson
+      data: https://poop.maprva.org/data/water.geojson
+  layers:
+    - type: line
+      source: water
+      filter: [==, [geometry-type], LineString]
+      line-color: gray
+      line-opacity: 0.5
+      line-width: 3
+      beforeLayerId: building
+    - type: fill
+      source: water
+      filter: [==, [geometry-type], Polygon]
+      fill-color: gray
+      fill-opacity: 0.5
+      beforeLayerId: building
+    - type: symbol
+      filter: [==, [get, type], streamgauge]
+      icon-image: pinhead:circle_outline_with_top_left_quarter_and_bottom_right_quarter
+      icon-overlap: always
+      icon-color:
+        - case
+        - [ ==, [ get, floodCategory ], major ]
+        - purple
+        - [ ==, [ get, floodCategory ], moderate ]
+        - red
+        - [ ==, [ get, floodCategory ], minor ]
+        - orange
+        - [ ==, [ get, floodCategory ], action ]
+        - yellow
+        - [ ==, [ get, floodCategory ], no_flooding ]
+        - green
+        - gray
+    - type: symbol
+      filter: [==, [get, type], test]
+      icon-image: pinhead:circle
+      icon-overlap: always
+      icon-opacity:
+        - interpolate
+        - [linear]
+        - [to-number, [get, age]]
+        - 0
+        - 1
+        - 30
+        - 0
+      icon-color:
+        - case
+        - [">=", [to-number, [get, Ecoli]], 235]
+        - red
+        - [">=", [to-number, [get, Ecoli]], 100]
+        - yellow
+        - green
+    - type: symbol
+      filter: [==, [get, man_made], outfall]
+      icon-image: pinhead:triangle_down
+      icon-overlap: always
+      icon-color:
+        - case
+        - [ ==, [ get, cso_now ], true ]
+        - purple
+        - [ ==, [ get, cso_active ], true ]
+        - red
+        - [ ==, [ get, cso_recent ], true ]
+        - orange
+        - green
+  extends: https://styles.maprva.org/maptiler-basic.json
+  
+
 popupTemplate: |
   {% if properties.type == "test" %}
     <h3>Test Results<br>{{ properties.niceName }} - {{ properties.creationdate | date: "%B %d" }} </h3>
@@ -40,86 +115,65 @@ popupTemplate: |
     <br>
   {%- endfor %}
   </details>
-style:
-  sources:
-    water:
-      type: geojson
-      data: https://poop.maprva.org/data/water.geojson
-  layers:
-    - type: line
-      source: water
-      filter: [==, [geometry-type], LineString]
-      line-color: gray
-      line-opacity: 0.5
-      line-width: 3
-      beforeLayerId: building
-    - type: fill
-      source: water
-      filter: [==, [geometry-type], Polygon]
-      fill-color: gray
-      fill-opacity: 0.5
-      beforeLayerId: building
-    - type: symbol
-      filter: [==, [get, type], streamgauge]
-      icon-image: pinhead:circle_outline_with_top_left_quarter_and_bottom_right_quarter
-      icon-overlap: always
-      #icon-color:
-      #  - case
-      #  - [ ==, [ get, cso_now ], true ]
-      #  - darkred
-      #  - [ ==, [ get, cso_active ], true ]
-      #  - red
-      #  - [ ==, [ get, cso_recent ], true ]
-      #  - orange
-      #  - green
-    - type: symbol
-      filter: [==, [get, type], test]
-      icon-image: pinhead:circle
-      icon-overlap: always
-      icon-opacity:
-        - interpolate
-        - [linear]
-        - [to-number, [get, age]]
-        - 0
-        - 1
-        - 30
-        - 0
-      icon-color:
-        - case
-        - [">=", [to-number, [get, Ecoli]], 235]
-        - red
-        - [">=", [to-number, [get, Ecoli]], 100]
-        - yellow
-        - green
-    - type: symbol
-      filter: [==, [get, man_made], outfall]
-      icon-image: pinhead:triangle_down
-      icon-overlap: always
-      icon-color:
-        - case
-        - [ ==, [ get, cso_now ], true ]
-        - darkred
-        - [ ==, [ get, cso_active ], true ]
-        - red
-        - [ ==, [ get, cso_recent ], true ]
-        - orange
-        - green
-  extends: https://styles.maprva.org/maptiler-basic.json
 controls:
   - type: HTMLControl
     options:
       html: >
         <div id="legend" class="map-legend">
             <h4>CSO Outfalls</h4>
-            <div><div class="triangle" style="background: green;"></div>No recent events</div>
-            <div><div class="triangle" style="background: orange;"></div>Recent event</div>
-            <div><div class="triangle" style="background: red;"></div>Active event</div>
-            <div><div class="triangle" style="background: darkred;"></div>Event happening now</div>
+            <div>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 15"><path fill="purple" d="m8.35 13.64 5.69-9.11a1 1 0 0 0-.31-1.38c-.16-.1-.35-.15-.53-.15H1.8c-.55 0-1 .45-1 1 0 .19.06.37.16.53l5.69 9.11a1.003 1.003 0 0 0 1.7 0"/></svg>
+              Event happening now
+            </div>
+            <div>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 15"><path fill="red" d="m8.35 13.64 5.69-9.11a1 1 0 0 0-.31-1.38c-.16-.1-.35-.15-.53-.15H1.8c-.55 0-1 .45-1 1 0 .19.06.37.16.53l5.69 9.11a1.003 1.003 0 0 0 1.7 0"/></svg>
+              Active event
+            </div>
+            <div>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 15"><path fill="orange" d="m8.35 13.64 5.69-9.11a1 1 0 0 0-.31-1.38c-.16-.1-.35-.15-.53-.15H1.8c-.55 0-1 .45-1 1 0 .19.06.37.16.53l5.69 9.11a1.003 1.003 0 0 0 1.7 0"/></svg>
+              Recent event
+            </div>
+            <div>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 15"><path fill="green" d="m8.35 13.64 5.69-9.11a1 1 0 0 0-.31-1.38c-.16-.1-.35-.15-.53-.15H1.8c-.55 0-1 .45-1 1 0 .19.06.37.16.53l5.69 9.11a1.003 1.003 0 0 0 1.7 0"/></svg>
+              No recent events
+            </div>
+            
             <h4>James River Watch testing sites</h4>
-            <div><div class="circle"  style="background-color: red;"></div>E. Coli &gt; 235</div>
-            <div><div class="circle"  style="background-color: yellow;"></div>&gt; 100</div>
-            <div><div class="circle"  style="background-color: green;"></div>&lt; 100</div>
-            <div>Transparency = days since test</div>
+            <div>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 15"><path fill="red" d="m8.35 13.64 5.69-9.11a1 1 0 0 0-.31-1.38c-.16-.1-.35-.15-.53-.15H1.8c-.55 0-1 .45-1 1 0 .19.06.37.16.53l5.69 9.11a1.003 1.003 0 0 0 1.7 0"/></svg>
+              E. Coli &gt; 235
+            </div>
+            <div>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 15"><path fill="orange" d="m8.35 13.64 5.69-9.11a1 1 0 0 0-.31-1.38c-.16-.1-.35-.15-.53-.15H1.8c-.55 0-1 .45-1 1 0 .19.06.37.16.53l5.69 9.11a1.003 1.003 0 0 0 1.7 0"/></svg>
+              &gt; 100
+            </div>
+            <div>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 15"><path fill="green" d="m8.35 13.64 5.69-9.11a1 1 0 0 0-.31-1.38c-.16-.1-.35-.15-.53-.15H1.8c-.55 0-1 .45-1 1 0 .19.06.37.16.53l5.69 9.11a1.003 1.003 0 0 0 1.7 0"/></svg>
+              &lt; 100
+            </div>
+            <div>Transparency = days since test (invisible at 30 days)</div>
+            
+            <h4>NOAA Stream Gauge</h4>
+            <div>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 15"><path fill="purple" d="M7.5 0c4.06 0 7.37 3.23 7.5 7.26v.24c0 4.06-3.23 7.37-7.26 7.5H7.5C3.36 15 0 11.64 0 7.5S3.36 0 7.5 0m0 1.5v6h-6c0 3.31 2.69 6 6 6v-6h6c0-3.31-2.69-6-6-6"/></svg>
+              major flooding
+            </div>
+            <div>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 15"><path fill="red" d="M7.5 0c4.06 0 7.37 3.23 7.5 7.26v.24c0 4.06-3.23 7.37-7.26 7.5H7.5C3.36 15 0 11.64 0 7.5S3.36 0 7.5 0m0 1.5v6h-6c0 3.31 2.69 6 6 6v-6h6c0-3.31-2.69-6-6-6"/></svg>
+              moderate flooding
+            </div>
+            <div>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 15"><path fill="orange" d="M7.5 0c4.06 0 7.37 3.23 7.5 7.26v.24c0 4.06-3.23 7.37-7.26 7.5H7.5C3.36 15 0 11.64 0 7.5S3.36 0 7.5 0m0 1.5v6h-6c0 3.31 2.69 6 6 6v-6h6c0-3.31-2.69-6-6-6"/></svg>
+              minor flooding
+            </div>
+            <div>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 15"><path fill="yellow" d="M7.5 0c4.06 0 7.37 3.23 7.5 7.26v.24c0 4.06-3.23 7.37-7.26 7.5H7.5C3.36 15 0 11.64 0 7.5S3.36 0 7.5 0m0 1.5v6h-6c0 3.31 2.69 6 6 6v-6h6c0-3.31-2.69-6-6-6"/></svg>
+              action
+            </div>
+            <div>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 15"><path fill="green" d="M7.5 0c4.06 0 7.37 3.23 7.5 7.26v.24c0 4.06-3.23 7.37-7.26 7.5H7.5C3.36 15 0 11.64 0 7.5S3.36 0 7.5 0m0 1.5v6h-6c0 3.31 2.69 6 6 6v-6h6c0-3.31-2.69-6-6-6"/></svg>
+              no flooding
+            </div>
         </div>
       css: >
         .map-legend {
@@ -132,22 +186,11 @@ controls:
             left: 10px;
             z-index: 1;
         }
+        .map-legend svg { height: 15px; }
         .map-legend h4 {
             margin: 10px 0;
         }
         .map-legend div { margin-left: 10px; }
-        .map-legend div div {
-            display: inline-block;
-            margin: 0 10px 0 0;
-            height: 10px;
-            width: 10px;
-        }
-        .triangle {
-          clip-path: polygon(0% 0%, 100% 0%, 50% 100%); 
-        }
-        .circle {
-          border-radius: 50%;
-        }
 ---
 const testNames = {
   'J10': "14th Street",
