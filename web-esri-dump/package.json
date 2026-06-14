@@ -1,0 +1,43 @@
+{
+  "name": "web-esri-dump",
+  "publishConfig": {
+    "access": "public"
+  },
+  "version": "dev",
+  "description": "a esbuild bundle of esri-dump for use on the web",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "node ./build.js"
+  },
+  "type": "module",
+  "devDependencies": {
+    "@types/node": "^22.6.1",
+    "esbuild": "^0.24.0"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "esri-dump": "^5.4.0",
+    "node-events": "^0.0.2"
+  },
+  "peerDependencies": {
+    "@maplibre/maplibre-gl-style-spec": "*"
+  },
+  "bin": {
+    "ultra": "./bin/run.js"
+  },
+  "oclif": {
+    "bin": "ultra",
+    "commands": "./cli",
+    "dirname": "ultra",
+    "topicSeparator": " "
+  },
+  "jest": {
+    "transformIgnorePatterns": [
+      "node_modules/(?!osm2geojson-ultra)"
+    ],
+    "transform": {
+      "^.+\\.js$": "esbuild-jest",
+      "node_modules/.+\\.js$": "esbuild-jest"
+    }
+  }
+}
