@@ -12,7 +12,7 @@ style:
   sources:
     water:
       type: geojson
-      data: https://poop.maprva.org/data/water.geojson
+      data: https://river.maprva.org/data/water.geojson
   layers:
     - type: line
       source: water
@@ -192,7 +192,7 @@ controls:
         }
         .map-legend div { margin-left: 10px; }
 ---
-import EsriDump from "https://poop.maprva.org/web-esri-dump.js";
+import EsriDump from "https://river.maprva.org/web-esri-dump.js";
 
 const monthAgo = new Date();
 monthAgo.setMonth(monthAgo.getUTCMonth() - 1);
@@ -249,7 +249,7 @@ export const source = async () => {
 
   // fetch all data in parallel
   const resps = await Promise.all([
-    fetch(`https://poop.maprva.org/data/cso_overflow.geojson?t=${Date.now()}`),
+    fetch(`https://river.maprva.org/data/cso_overflow.geojson?t=${Date.now()}`),
     fetch("https://api.water.noaa.gov/nwps/v1/gauges?bbox.xmin=-77.60205967932723&bbox.ymin=37.51971667627613&bbox.xmax=-77.31705491509821&bbox.ymax=37.62441381867703&srid=EPSG_4326"),
   ]);
   const [cso, gauges] = await Promise.all(resps.map(r => r.json()));
