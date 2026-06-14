@@ -16,23 +16,6 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v6
         
-      - name: jet up Python
-        uses: actions/setup-python@v6
-
-      - name: Set up Python packages
-        run: pip install esridump
-        
-      - name: Poll James River Watch ArcGIS APi
-        run: ./james_river_watch.sh
-
-      - name: Commit record to repository
-        run: |
-          git config user.name github-actions
-          git config user.email github-actions@github.com
-          git add data/james_river_watch data/james_river_watch.geojson
-          git commit -m "[auto] Pull James River Watch data $(TZ=America/New_York date +'%Y-%m-%d %H:%M')"
-          git push
-        
       - name: Set up R
         uses: eddelbuettel/github-actions/r2u-setup@master
 
