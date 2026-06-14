@@ -9,6 +9,6 @@
   "author": "",
   "license": "WTFPL",
   "dependencies": {
-    "@trailstash/ultra": "=6.0.1"
+    "@trailstash/ultra": "^6.0.0"
   }
 }
