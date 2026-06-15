@@ -124,7 +124,7 @@ popupTemplate: |
   </details>
 controls:
   - type: HTMLControl
-    position: bottom-left
+    position: top-left
     options:
       html: >
         <div id="legend" class="map-legend">
