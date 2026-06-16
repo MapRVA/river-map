@@ -31,9 +31,8 @@ jobs:
         with:
           image: ${{ env.IMAGE_NAME }}
           tags: ${{ steps.vars.outputs.sha_short }} latest
-          context: ./cso_proxy
-          containerfiles: |
-            ./cso_proxy/Dockerfile
+          context: cso_proxy
+          containerfiles: Dockerfile
 
       - name: Push Image
         id: push
