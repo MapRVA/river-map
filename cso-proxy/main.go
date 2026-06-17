@@ -75,9 +75,12 @@ var csoGeoBytes []byte
 var csoNameRegex = regexp.MustCompile(`^CSO\s+(\d+).*`)
 
 var (
-	baseFC      GeoJSONFeatureCollection
-	tokenMutex  sync.RWMutex
-	cachedToken string
+	baseFC          GeoJSONFeatureCollection
+	tokenMutex      sync.RWMutex
+	cachedToken     string
+	cacheMutex      sync.RWMutex
+	cachedGeoJSON   []byte
+	cacheExpiration time.Time
 
 	scriptRegex = regexp.MustCompile(`<script\s+[^>]*src="([^"]+)"`)
 	tokenRegex  = regexp.MustCompile(`PERMANENT_TOKEN\s*:\s*["']([^"']+)["']`)
@@ -259,7 +262,28 @@ func geoJSONHandler(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method != "GET" {
 		w.Header().Set("Allow", "GET")
-        http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Try read lock first
+	cacheMutex.RLock()
+	if cachedGeoJSON != nil && time.Now().Before(cacheExpiration) {
+		w.Header().Set("Content-Type", "application/geo+json")
+		w.Write(cachedGeoJSON)
+		cacheMutex.RUnlock()
+		return
+	}
+	cacheMutex.RUnlock()
+
+	// Acquire write lock to perform fetch or wait for someone else performing it
+	cacheMutex.Lock()
+	defer cacheMutex.Unlock()
+
+	// Double check in case another goroutine fetched it while we were waiting
+	if cachedGeoJSON != nil && time.Now().Before(cacheExpiration) {
+		w.Header().Set("Content-Type", "application/geo+json")
+		w.Write(cachedGeoJSON)
 		return
 	}
 
@@ -564,8 +588,16 @@ func geoJSONHandler(w http.ResponseWriter, r *http.Request) {
 		Features: outFeatures,
 	}
 
-	w.Header().Set("Content-Type", "application/geo+json")
-	if err := json.NewEncoder(w).Encode(outFC); err != nil {
-		log.Printf("Error writing response GeoJSON: %v", err)
+	responseBytes, err := json.Marshal(outFC)
+	if err != nil {
+		log.Printf("Error marshaling response GeoJSON: %v", err)
+		http.Error(w, "Internal server error encoding GeoJSON", http.StatusInternalServerError)
+		return
 	}
+
+	cachedGeoJSON = responseBytes
+	cacheExpiration = time.Now().Add(1 * time.Hour)
+
+	w.Header().Set("Content-Type", "application/geo+json")
+	w.Write(responseBytes)
 }
