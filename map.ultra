@@ -261,7 +261,7 @@ export const source = async () => {
 
   // fetch all data in parallel
   const resps = await Promise.all([
-    fetch(`https://river.maprva.org/data/cso_overflow.geojson?t=${Date.now()}`),
+    fetch(`https://cso.maprva.org/data/?t=${Date.now()}`),
     fetch("https://api.water.noaa.gov/nwps/v1/gauges?bbox.xmin=-77.60205967932723&bbox.ymin=37.51971667627613&bbox.xmax=-77.31705491509821&bbox.ymax=37.62441381867703&srid=EPSG_4326"),
   ]);
   const [cso, gauges] = await Promise.all(resps.map(r => r.json()));
