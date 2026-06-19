@@ -4,11 +4,18 @@
   "description": "A map of the river in richmond",
   "main": "index.js",
   "scripts": {
-    "build": "ultra build ./map.ultra"
+    "serve": "http-server dist -c-1",
+    "build": "npm run build:ultra && npm run build:web-esri-dump && npm run build:data",
+    "build:ultra": "ultra build ./map.ultra",
+    "build:web-esri-dump": "cp -L web-esri-dump.js dist/.",
+    "build:data": "cp -r data dist/."
   },
   "author": "",
   "license": "WTFPL",
   "dependencies": {
     "@trailstash/ultra": "^6.0.0"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1"
   }
 }
