@@ -18,6 +18,7 @@ options:
 
 
 style:
+  extends: https://styles.maprva.org/maptiler-basic.json
   sprite:
     - id: pinhead
       url: https://overpass-ultra.us/sprites/pinhead
@@ -88,7 +89,6 @@ style:
         - [ ==, [ get, cso_recent ], true ]
         - orange
         - green
-  extends: https://styles.maprva.org/maptiler-basic.json
   
 
 popupTemplate: |
