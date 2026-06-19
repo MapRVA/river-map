@@ -11,6 +11,10 @@ options:
   maxBounds: [-77.58,37.40,-77.36,37.69]
   zoom: 12
   hash: m
+  attributionControl:
+    compact: false
+    customAttribution: |
+      <a href="https://github.com/maprva/river-map">View Source</a>
 
 
 style:
